@@ -1,4 +1,5 @@
-﻿using System.Reflection.Emit;
+﻿using System.Net.NetworkInformation;
+using System.Reflection.Emit;
 
 namespace lesson
 {
@@ -15,14 +16,20 @@ namespace lesson
         /// <param name="args">The arguments passed to the program</param>
         public static void Main(string[] args)
         {
-            int choice = CreateMenu();
-            if (choice == -1)
+            try
             {
-                Console.WriteLine("Scelta non valida");
-            }
-            else
-            {
+                int choice = CreateMenu();
                 DoOperation(choice);
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine(ex.Message);
+
+                Main(args);
+            }
+            catch (FormatException ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
@@ -40,19 +47,18 @@ namespace lesson
             Console.WriteLine("3 - Stampa matrice identità");
 
             Console.Write("Fai la tua scelta:");
-            int returnValue;
-            int choice = Convert.ToInt32(Console.ReadLine());
+
+            
+            int choice;
+            choice = Convert.ToInt32(Console.ReadLine());
             if (choice < 1 || choice > 3)
             {
-                Console.WriteLine("Hai sbagliato");
-                returnValue = -1;
-            }
-            else
-            { 
-                returnValue = choice;
+                throw new ArgumentException(
+                    "Hai sbagliato, voglio una scelta valida"
+                );
             }
 
-            return returnValue;
+            return choice;
         }
 
         /// <summary>
@@ -74,8 +80,7 @@ namespace lesson
                     PrintIdentityMatrix();
                     break;
                 default:
-                    Console.WriteLine("Scelta non valida");
-                    break;
+                    throw new ArgumentException("Scelta non valida");
             }
         }
 
@@ -85,7 +90,28 @@ namespace lesson
         /// </summary>
         private static void LoadMatrix()
         {
-            
+            matrix = new int[2, 2];
+
+            int rows = matrix.GetLength(0);
+            int columns = matrix.GetLength(1);
+
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    try
+                    {
+                        Console.Write($"matrix[{i}, {j}] = ");
+                        matrix[i, j] = Convert.ToInt32(Console.ReadLine());
+                    }
+                    catch (FormatException)
+                    {
+                        Console.WriteLine("Valore non valido");
+
+                        j--; // torno indietro per richiedere l'input
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -93,7 +119,25 @@ namespace lesson
         /// </summary>
         private static void PrintMatrix()
         {
+            try
+            {
+                int rows = matrix.GetLength(0);
+                int columns = matrix.GetLength(1);
 
+                for (int i = 0; i < rows; i++)
+                {
+                    for (int j = 0; j < columns; j++)
+                    {
+                        Console.Write($"{matrix[i, j]} ");
+                    }
+
+                    Console.WriteLine();
+                }
+            }
+            catch (NullReferenceException)
+            {
+                Console.WriteLine("Matrice non inizializzata");
+            }
         }
 
         /// <summary>
@@ -101,7 +145,24 @@ namespace lesson
         /// </summary>
         private static void PrintIdentityMatrix()
         {
+            matrix = new int[3, 3];
 
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    if (i == j)
+                    {
+                        matrix[i, j] = 1;
+                    }
+                    else
+                    {
+                        matrix[i, j] = 0;
+                    }
+                }
+            }
+
+            PrintMatrix();
         }
     }
 }
